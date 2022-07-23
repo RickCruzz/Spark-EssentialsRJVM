@@ -206,3 +206,4 @@ spark-warehouse/
 # Personal added
 spark-cluster/data/*
 spark-cluster/apps/*
+src/main/resources/warehouse/*
