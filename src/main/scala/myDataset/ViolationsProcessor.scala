@@ -50,6 +50,7 @@ object ViolationsProcessor {
 
     val spark = SparkSession.builder()
       .appName("Process Dataset")
+      .config("spark.master","local[*]")
       .getOrCreate()
 
     val violationsFile = args(0)

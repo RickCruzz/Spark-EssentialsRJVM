@@ -33,7 +33,7 @@ object main extends App{
 
   val spark = SparkSession.builder()
     .appName("ExploringDataset")
-    .config("spark.master","local")
+    .config("spark.master","local[*]")
     .getOrCreate()
 
 

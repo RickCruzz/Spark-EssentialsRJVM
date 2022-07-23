@@ -1,6 +1,6 @@
 package myDataset
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DecimalType
 
@@ -13,14 +13,23 @@ Testing functions and converting as DataSet
 object ViolationsProcessorSec extends App {
 
   val spark = SparkSession.builder()
-    .config("spark.master", "local")
+    .appName("Second Exploration")
+    .config("spark.master", "local[*]")
     .getOrCreate()
 
+
+  //Original File
+  //val violationsFile = "/media/corujin/Coding/Applaudo/ScalaTraining/DataSet/Open_Parking_and_Camera_Violations.csv"
+
+  //parquet Sample
+  val violationsFile = "/media/corujin/Coding/Applaudo/ScalaTraining/DataSet/Open_Parking_and_Camera_Violations/sample.parquet"
+
   val viDF = spark.read
+    .format("parquet")
     .option("inferSchema", "true")
     .option("header", "true")
     .option("sep", ",")
-    .csv("spark-cluster/data/Open_Parking_and_Camera_Violations.csv")
+    .load(violationsFile)
 
 
   spark.conf.set("spark.sql.legacy.timeParserPolicy", "LEGACY")
@@ -49,10 +58,21 @@ object ViolationsProcessorSec extends App {
                         Summons_Image: Option[String],
                       )
 
-
+/*
   // Renaming The columns in the file, Changing the Space to _
   val columnsRedirected = viDF.columns.mkString(",").replace(" ", "_").split(",").toSeq
   val violationDF = viDF.toDF(columnsRedirected: _*)
+  // Taking a sample of 4 years
+  //
+  val dfSample = violationDF.select("*").where("extract(YEAR from to_date(Issue_Date, 'MM/dd/yyyy')) >= 2019 and extract(YEAR from to_date(Issue_Date, 'MM/dd/yyyy')) <= 2022").coalesce(5)
+      dfSample.printSchema()
+      dfSample.write.mode(SaveMode.Append).save(s"${violationsFile.replace(".csv","")}/sample.parquet")
+*/
+
+
+  val violationDF = viDF
+
+  violationDF.printSchema()
   violationDF.createOrReplaceTempView("Violations")
 
 
@@ -71,9 +91,24 @@ object ViolationsProcessorSec extends App {
 
    */
 
+
+
+
+
+
   //Trying to identify Outliers
   // This DF contains data separated by Dates and Fields
-  val viTimesDF = spark.sql(
+  val viTimesDF = violationDF
+    .withColumn( "Date", to_date(col("Issue_Date"), "MM/dd/yyyy"))
+    .withColumn("Month", month(col("Date")))
+    .withColumn("Day", dayofmonth(col("Date")))
+    .withColumn("Year", year(col("Date")))
+    .withColumn("Week", weekofyear(col("Date")))
+    .withColumn("DayOfWeek", dayofweek(col("Date")))
+    .withColumn("Quarter", quarter(col("Date")))
+    .selectExpr("Date", "Month", "Day", "Year", "Week", "DayOfWeek","Quarter","Summons_Number")
+
+  val viTimesDFSQL = spark.sql(
     """select to_date(Issue_Date, 'MM/dd/yyyy') as Date,
                extract(MONTH from to_date(Issue_Date, 'MM/dd/yyyy')) as Month,
                extract(DAY from to_date(Issue_Date, 'MM/dd/yyyy')) as Day,
@@ -85,13 +120,8 @@ object ViolationsProcessorSec extends App {
     from Violations""")
 
   //Reducing the number of partitions
-  viTimesDF.coalesce(20)
+  //viTimesDF.coalesce(20)
   viTimesDF.persist()
-
-  // Counting total of violations by quarters
-  viTimesDF.groupBy("Year", "Quarter").agg(
-    count("Summons_Number").as("N_Violations")
-  ).orderBy(col("N_Violations").desc_nulls_last).show(200, false)
 
 
   //Generating the AVG of Tickets per Day of week by Year
@@ -99,44 +129,42 @@ object ViolationsProcessorSec extends App {
     count("Summons_Number").as("N_Violations")
   ).withColumn("AVG_Summons", (col("N_Violations") / 52.1429).cast(DecimalType(18, 2)))
     .orderBy(col("N_Violations").desc_nulls_last)
+
   viDayWeekYearDF.createOrReplaceTempView("Violations_Dayweek_avg")
 
-  //Showing Results into console
-  viDayWeekYearDF.show(200, false)
 
 
   //Generating the view with Tickets per Days, weeks and months
-  viTimesDF.groupBy("Year", "Month", "Week", "DayOfWeek").agg(
+  val countDF = viTimesDF.groupBy("Year", "Month", "Week", "DayOfWeek", "Date").agg(
     count("Summons_Number").as("N_Violations")
-  ).orderBy(col("N_Violations").desc_nulls_last).createOrReplaceTempView("Violations_DayWeek_Month_Year")
+  ).orderBy(col("N_Violations").desc_nulls_last)
+
+  countDF.createOrReplaceTempView("Violations_DayWeek_Month_Year")
+
+
+  val condition = ((countDF.col("Year") === viDayWeekYearDF.col("Year")) and (countDF.col("DayOfWeek") === viDayWeekYearDF.col("DayOfWeek")))
+  val joinedDF = countDF.join(viDayWeekYearDF, condition, "inner")
+  joinedDF.select("*")
+    .withColumn("Variation_Percent", round((((countDF.col("N_Violations") * 100) / viDayWeekYearDF.col("AVG_Summons")) - 100),4))
+    .orderBy(col("Date").asc)
+    .show(2000, false)
 
 
   // Now we can compare the AVG vs Number by day of week
   spark.sql(
-    """select vio_complete.Year, vio_complete.Week, vio_complete.DayOfWeek, vio_complete.Month,
+    """select vio_complete.Date, vio_complete.Year, vio_complete.Week, vio_complete.DayOfWeek, vio_complete.Month,
                vio_complete.N_Violations, vio_avg.AVG_Summons,
+              round((((vio_complete.N_Violations * 100) / vio_avg.AVG_Summons) - 100),4) as Variation_Percent,
               case when vio_complete.N_Violations > vio_avg.AVG_Summons then "Above AVG"
               when vio_complete.N_Violations < vio_avg.AVG_Summons then "Less than AVG"
               else "ERROR" end as Above_AVG
               from Violations_DayWeek_Month_Year as vio_complete
               left join Violations_Dayweek_avg as vio_avg
               on ((vio_avg.Year = vio_complete.Year) and (vio_avg.DayOfWeek = vio_complete.DayOfWeek))
-              where (vio_complete.Year = 2021)
-              order by Above_AVG desc, vio_complete.N_Violations desc
-  """).show(400, false)
-  println(spark.sql(
-    """select vio_complete.Year, vio_complete.Week, vio_complete.DayOfWeek, vio_complete.Month,
-               vio_complete.N_Violations, vio_avg.AVG_Summons,
-              case when vio_complete.N_Violations > vio_avg.AVG_Summons then "Above AVG"
-              when vio_complete.N_Violations < vio_avg.AVG_Summons then "Less than AVG"
-              else "ERROR" end as Above_AVG,
-              case when vio_complete.N_Violations > vio_avg.AVG_Summons then 1
-              when vio_complete.N_Violations < vio_avg.AVG_Summons then 0
-              else 2 end as caseCompare
-              from Violations_DayWeek_Month_Year as vio_complete
-              left join Violations_Dayweek_avg as vio_avg
-              on ((vio_avg.Year = vio_complete.Year) and (vio_avg.DayOfWeek = vio_complete.DayOfWeek))
-              where (vio_complete.Year = 2021)
-              order by caseCompare desc
-  """).count())
+              order by vio_complete.Date
+  """)
+
+
+
+
 }
