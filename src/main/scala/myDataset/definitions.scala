@@ -1,11 +1,39 @@
 package myDataset
 
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.DataTypes
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SaveMode, _}
 
 object definitions {
 
+  def schemaFile(): StructType = {
+    //Creating DecimalType
+    val decimalType =  DataTypes.createDecimalType(24,2)
+
+    //Defining Schema
+    val violationsSchema = StructType(Array(
+      StructField("Plate", StringType),
+      StructField("State", StringType),
+      StructField("License Type", StringType),
+      StructField("Summons Number", StringType),
+      StructField("Issue Date", DateType),
+      StructField("Violation Time", StringType),
+      StructField("Violation", StringType),
+      StructField("Judgment Entry Date", StringType),
+      StructField("Fine Amount", decimalType),
+      StructField("Penalty Amount", decimalType),
+      StructField("Interest Amount", decimalType),
+      StructField("Reduction Amount", decimalType),
+      StructField("Payment Amount", decimalType),
+      StructField("Amount Due", decimalType),
+      StructField("Precinct", StringType),
+      StructField("County", StringType),
+      StructField("Issuing Agency", StringType),
+      StructField("Violation Status", StringType),
+      StructField("Summons Image", StringType),
+      StructField("_corrupt_record", StringType)))
+    return violationsSchema
+  }
 
   def generateSilverFile(df: DataFrame, path: String = ""): String = {
     // Renaming The columns in the file, Changing the Space to _
@@ -34,7 +62,7 @@ object definitions {
    // Taking a sample of 4 years
    // From 2022 until 2019
    val sampleDF = df
-     .where("extract(YEAR from Issue_Date) >= 2019 and extract(YEAR from Issue_Date) <= 2022")
+     .where("extract(YEAR from Issue_Date) >= 2016 and extract(YEAR from Issue_Date) <= 2022")
      .coalesce(6)
     sampleDF.write.mode(SaveMode.Append).save(s"${path.replace(".csv", "")}/sample.parquet")
     return (s"${path.replace(".csv", "")}/sample.parquet")

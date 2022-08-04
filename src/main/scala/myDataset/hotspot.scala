@@ -9,15 +9,15 @@ object hotspot {
 
   def main(args: Array[String]) = {
 
-   if (args.length < 2)
-      println(
-        """Please define the correct Parameters
-          |1 - Path to dataset (PARQUET_FILE/SAMPLE_FILE).
-          |2 - Path to precincts (CSV_FILE).
-          |The first parameter file can be generated with processor.scala main method.
-          |""".stripMargin)
-      System.exit(1)
-
+   if (args.length < 2) {
+     println(
+       """Please define the correct Parameters
+         |1 - Path to dataset (PARQUET_FILE/SAMPLE_FILE).
+         |2 - Path to precincts (CSV_FILE).
+         |The first parameter file can be generated with processor.scala main method.
+         |""".stripMargin)
+     System.exit(1)
+   }
 
     val mainPath = args(0)
     val precinctPath = args(1)
@@ -38,14 +38,11 @@ object hotspot {
       // Joining and Identifying the Hot Spot by Boroughs
       val condition = (mainDF.col("Precinct") === precinctDF.col("PrecinctNumber"))
       val hotSpotDF = mainDF.join(precinctDF, condition, "inner")
-        .groupBy("Year", "Month", "Borough")
+        .groupBy("Year", "PrecinctName", "Borough")
         .agg(count("*").alias("N_Occurrences"))
         .orderBy(col("N_Occurrences").desc_nulls_last)
 
       // exporting the dataframe
-      precinctDF.show(50, false)
-      mainDF.printSchema()
-      mainDF.groupBy("Precinct").agg(count("*").as("nrows")).orderBy(col("nrows").desc_nulls_last).show(50,false)
       hotSpotDF.show(50,false)
       val goldenPath = "/opt/spark-data/goldenLayer/"
       hotSpotDF.coalesce(1).write.mode("overwrite").parquet(goldenPath + "results_hot_spot")

@@ -6,6 +6,7 @@ import org.apache.spark.sql.expressions._
 import org.apache.spark.sql.types._
 
 import java.io.FileNotFoundException
+import java.nio.file.Paths
 
 object results {
 
@@ -20,6 +21,21 @@ object results {
           |""".stripMargin)
       System.exit(1)
     }
+    val path = args(0)
+    val fileName = Paths.get(path).getFileName            // Convert the path string to a Path object and get the "base name" from that path.
+    val extension = fileName.toString.split("\\.").last
+
+    if (extension.toUpperCase() != "PARQUET"){
+      println(
+        """
+          |You informed a File that is not acceptable. Please inform a correct Parquet File.
+          |This file can be generated with processor.scala main method.
+          |Please define the correct Parameters
+          |1 - Path to dataset (PARQUET_FILE/SAMPLE_FILE).
+          |2 - Set 1 to Generate Hive Views. (OPTIONAL)
+          |""".stripMargin)
+      System.exit(1)
+    }
 
 
     var views = "0"
@@ -31,7 +47,7 @@ object results {
 
     //val path = "/media/corujin/Coding/Applaudo/ScalaTraining/DataSet/Open_Parking_and_Camera_Violations/silverlayer.parquet"
 
-    val path = args(0)
+
 
     val spark = SparkSession.builder()
       .config("spark.master", "local[*]")
@@ -50,6 +66,7 @@ object results {
     try{
       //Reading the Parquet File
       val mainDF = spark.read.parquet(path)
+      mainDF.printSchema()
 
 
       ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +77,7 @@ object results {
       val countRecords = mainDF.count()
       println(s"Total of Records in the Dataset: ${countRecords} Rows")
 
-      val govStates = Array("GV", "DP", "DC")
+      val govStates = Array("GV", "DP")
       val govDF = mainDF.where(
         upper(col("State")).isInCollection(govStates))
         .groupBy("State").agg(count("*").as("N_Records"))
@@ -70,15 +87,13 @@ object results {
 
 
       //Peak Times of Violations
-      val windowSpec = Window.partitionBy("Violation_Turn", "Year").orderBy(col("Num_Records").desc_nulls_last)
-
       val timeDF = mainDF.groupBy("Violation_Hour", "Violation_Turn", "Year").agg(
         count("Summons_Number").as("Num_Records"))
 
-      timeDF.withColumn("row_number", row_number.over(windowSpec))
-        .where(col("row_number") <= lit(3))
-        .orderBy(col("Num_Records").desc_nulls_last, col("row_number").desc)
-        .drop("row_number").show(20, false)
+      timeDF.where(col("Year") === lit(2021))
+        .orderBy(col("Violation_Turn").asc_nulls_last, col("Violation_Hour").asc_nulls_last)
+        .show(30, false)
+
 
 
       //Wich State have more Violations. Payed Vs Open.

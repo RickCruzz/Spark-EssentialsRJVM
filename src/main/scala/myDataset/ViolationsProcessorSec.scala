@@ -1,6 +1,7 @@
 package myDataset
 
 
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DecimalType
@@ -19,10 +20,10 @@ object ViolationsProcessorSec extends App {
   val spark = SparkSession.builder()
     .config("spark.master", "local[*]")
     .appName("Second Exploration")
-    .config("spark.executor.memory", "1g")
-    .config("spark.file.transferTo","false") // Forces to wait until buffer to write in the Disk, decrease I/O
-    .config("spark.shuffle.file.buffer", "1m") // More buffer before writing
-    .config("spark.io.compression.lz4.blockSize","512k")
+//    .config("spark.executor.memory", "1g")
+//    .config("spark.file.transferTo","false") // Forces to wait until buffer to write in the Disk, decrease I/O
+//    .config("spark.shuffle.file.buffer", "1m") // More buffer before writing
+ //   .config("spark.io.compression.lz4.blockSize","512k")
     .getOrCreate()
 
 
@@ -49,13 +50,46 @@ def typeFile(bigFile: Boolean = false, sample: Boolean = false) = {
     .option("inferSchema", "true")
     .option("header", "true")
     .option("sep", ",")
-    .load(violationsFile)
+    .load("/media/corujin/Coding/Applaudo/ScalaTraining/Sharepoint Courses/Spark Essentials/spark-essentials-master/spark-cluster/data/Open_Parking_and_Camera_Violations/silver.parquet")
+
+  val mainDF = spark.read.parquet("/media/corujin/Coding/Applaudo/ScalaTraining/Sharepoint Courses/Spark Essentials/spark-essentials-master/spark-cluster/data/Open_Parking_and_Camera_Violations/silver.parquet")
+
+
+
+  // This DF contains data separated by Dates and Fields
+  // Trying to identify Outliers and discovery wich days/months are inside the mean of the year
+  val viTimesDF = mainDF.select("Issue_Date", "Summons_Number", "Month", "Day", "Year")
+    .withColumn("Week", weekofyear(col("Issue_Date")))
+    .withColumn("DayOfWeek", dayofweek(col("Issue_Date")))
+
+
+  // AVG of Tickets per Day of week by Year
+  val viDayWeekYearDF = viTimesDF.groupBy("Year", "DayOfWeek").agg(
+    count("Summons_Number").as("Total_Violations_Day")
+  ).withColumn("AVG_Violations_Day", (col("Total_Violations_Day") / 52.1429).cast(DecimalType(18, 2)))
+
+  // Tickets per Days, weeks and months
+  val countDF = viTimesDF.groupBy("Year", "Month", "Week", "DayOfWeek", "Issue_Date").agg(
+    count("Summons_Number").as("N_Violations")
+  )
+
+  // Now we can compare the AVG vs Number by day of week
+  val condition = ((countDF.col("Year") === viDayWeekYearDF.col("Year"))
+    and (countDF.col("DayOfWeek") === viDayWeekYearDF.col("DayOfWeek")))
+  val joinedDF = countDF.alias("count").join(viDayWeekYearDF.alias("totals"), condition, "inner")
+    .select("count.Year", "count.Month", "count.Week", "count.DayOfWeek", "count.Issue_Date", "count.N_Violations", "totals.Total_Violations_Day", "totals.AVG_Violations_Day")
+    .withColumn("Variation_Percent",
+      round((((countDF.col("N_Violations") * 100L) / viDayWeekYearDF.col("AVG_Violations_Day")) - 100L), 4))
+    .orderBy(col("Issue_Date").asc)
+
+  joinedDF.where(col("Year") === lit(2021)).show(92, false)
+
 
   // STARTING USING ORC/PARQUET - OK
   // Try/Catch - ?
   // Handling errors with application - ?
   // % of data that is missing or problem - ?
-
+/*
 
   // Precinct File csv
   val precinctFile = "/media/corujin/Coding/Applaudo/ScalaTraining/DataSet/precincts.csv"
@@ -280,4 +314,6 @@ def typeFile(bigFile: Boolean = false, sample: Boolean = false) = {
   // -> PRECINT JOIN TO UNDERSTAND WHERE ARE THE HOTSPOTS
   // -> TIME OF MOST VIOLATIONS
 */
+
+ */
 }

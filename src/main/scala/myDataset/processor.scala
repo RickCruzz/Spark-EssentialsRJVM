@@ -5,6 +5,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.types._
 
 import java.io.FileNotFoundException
+import java.nio.file.Paths
 import scala.util.{Failure, Success, Try}
 
 
@@ -42,12 +43,32 @@ object processor {
     //val path = "/media/corujin/Coding/Applaudo/ScalaTraining/DataSet/Open_Parking_and_Camera_Violations/silverlayer.parquet"
     val path = args(0)
     val typeStage = args(1)
+    val fileName = Paths.get(path).getFileName            // Convert the path string to a Path object and get the "base name" from that path.
+    val extension = fileName.toString.split("\\.").last
 
+    if (typeStage.toUpperCase() == "SILVER" & extension.toUpperCase() != "CSV"){
+      println(
+        """
+          |You informed a file to execute the Silver Layer, but the file is not a CSV file.
+          |Please define the correct Parameters
+          |1 - Path to dataset.
+          |2 - Type to create (Silver/Sample)
+          |""".stripMargin)
+      System.exit(1)
+    }
 
     try {
       val finalPath = typeStage.toUpperCase() match {
         case "SILVER" => generateSilverFile(
-          spark.read.format("csv").option("inferSchema", "true").option("header", "true").option("sep", ",").load(path)
+          spark.read.schema(schemaFile())
+            .options(Map(
+              "dateFormat" -> "MM/dd/yyyy",
+              "mode"-> "PERMISSIVE",
+              "enforceSchema" -> "true",
+              "header" -> "true",
+              "sep" -> ",",
+              "nullValue" -> "")
+            ).csv(path)
           , path)
         case "SAMPLE" => generateSampleData(
           spark.read.parquet(path)

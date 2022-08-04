@@ -1,4 +1,4 @@
-Precinct,PrecintCode,PrecinctNumber,Phone,Borough,Address
+PrecinctName,PrecintCode,PrecinctNumber,Phone,Borough,Address
 1st Precinct,1st,1,212-334-0611,Manhattan,16 Ericsson Place
 5th Precinct,5th,5,212-334-0711,Manhattan,19 Elizabeth Street
 6th Precinct,6th,6,212-741-4811,Manhattan,233 West 10 Street
