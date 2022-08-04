@@ -24,6 +24,23 @@ Plate,State,License Type,Summons Number,Issue Date,Violation Time,Violation,Judg
 JAL2979,NY,PAS,4664359196,08/28/2019,06:56P,PHTO SCHOOL ZN SPEED VIOLATION,,50.00,0.00,0.00,0.00,50.00,0.00,000,BX,DEPARTMENT OF TRANSPORTATION,,View Summons (http://nycserv.nyc.gov/NYCServWeb/ShowImage?searchID=VGtSWk1rNUVUVEZQVkVVMVRtYzlQUT09&locationName=_____________________)*
 ```
 
+
+## How the Dataset is processed
+
+There is 3 Main files of the Project inside the myDataset Package.
+### definitions.scala
+In this file is defined the functions to generate two different types of files.
+
+Silver -> Transform the CSV File into a SilverStage parquet file, selecting the columns that will be used in the processor.scala
+and inputing the Datatypes into the Schema.
+
+Sample -> Can be used to extract a Sample Data from the Silver parquet file.
+Predifined YEAR >= 2019 and YEAR <= 2022
+
+### processor.scala
+The function of this method is to 
+
+
 After seeing how the Schema is predefined by the Spark itself with the option `inferSchema`, to increase the perfomance of reading, the variable `violationsSchema` was created. With the types: `StringType`, `DateType` and `DoubleType` Eg: 
 
 ```scala

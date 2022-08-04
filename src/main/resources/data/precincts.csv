@@ -1,0 +1,78 @@
+Precinct,PrecintCode,PrecinctNumber,Phone,Borough,Address
+1st Precinct,1st,1,212-334-0611,Manhattan,16 Ericsson Place
+5th Precinct,5th,5,212-334-0711,Manhattan,19 Elizabeth Street
+6th Precinct,6th,6,212-741-4811,Manhattan,233 West 10 Street
+7th Precinct,7th,7,212-477-7311,Manhattan,19 1/2 Pitt Street
+9th Precinct,9th,9,212-477-7811,Manhattan,321 East 5 Street
+10th Precinct,10th,10,212-741-8211,Manhattan,230 West 20th Street
+13th Precinct,13th,13,212-477-7411,Manhattan,230 East 21st Street
+Midtown South Precinct,,,212-239-9811,Manhattan,357 West 35th Street
+17th Precinct,17th,17,212-826-3211,Manhattan,167 East 51st Street
+Midtown North Precinct,,,212-767-8400,Manhattan,306 West 54th Street
+19th Precinct,19th,19,212-452-0600,Manhattan,153 East 67th Street
+20th Precinct,20th,20,212-580-6411,Manhattan,120 West 82nd Street
+Central Park Precinct,,,212-570-4820,Manhattan,86th St & Transverse Road
+23rd Precinct,23rd,23,212-860-6411,Manhattan,164 East 102nd Street
+24th Precinct,24th,24,212-678-1811,Manhattan,151 West 100th Street
+25th Precinct,25th,25,212-860-6511,Manhattan,120 East 119th Street
+26th Precinct,26th,26,212-678-1311,Manhattan,520 West 126th Street
+28th Precinct,28th,28,212-678-1611,Manhattan,2271-89 8th Avenue
+30th Precinct,30th,30,212-690-8811,Manhattan,451 West 151st Street
+32nd Precinct,32nd,32,212-690-6311,Manhattan,250 West 135th Street
+33rd Precinct,33rd,33,212-927-3200,Manhattan,2207 Amsterdam Avenue
+34th Precinct,34th,34,212-927-9711,Manhattan,4295 Broadway
+40th Precinct,40th,40,718-402-2270,Bronx,257 Alexander Avenue
+41st Precinct,41st,41,718-542-4771,Bronx,1035 Longwood Avenue
+42nd Precinct,42nd,42,718-402-3887,Bronx,830 Washington Avenue
+43rd Precinct,43rd,43,718-542-0888,Bronx,900 Fteley Avenue
+44th Precinct,44th,44,718-590-5511,Bronx,2 East 169th Street
+45th Precinct,45th,45,718-822-5411,Bronx,2877 Barkley Avenue
+46th Precinct,46th,46,718-220-5211,Bronx,2120 Ryer Avenue
+47th Precinct,47th,47,718-920-1211,Bronx,4111 Laconia Avenue
+48th Precinct,48th,48,718-299-3900,Bronx,450 Cross Bronx Expressway
+49th Precinct,49th,49,718-918-2000,Bronx,2121 Eastchester Road
+50th Precinct,50th,50,718-543-5700,Bronx,3450 Kingsbridge Avenue
+52nd Precinct,52nd,52,718-220-5811,Bronx,3016 Webster Avenue
+60th Precinct,60th,60,718-946-3311,Brooklyn,2951 West 8th Street
+61st Precinct,61st,61,718-627-6611,Brooklyn,2575 Coney Island Avenue
+62nd Precinct,62nd,62,718-236-2611,Brooklyn,1925 Bath Avenue
+63rd Precinct,63rd,63,718-258-4411,Brooklyn,1844 Brooklyn Avenue
+66th Precinct,66th,66,718-851-5611,Brooklyn,5822 16th Avenue
+67th Precinct,67th,67,718-287-3211,Brooklyn,2820 Snyder Avenue
+68th Precinct,68th,68,718-439-4211,Brooklyn,333 65th Street
+69th Precinct,69th,69,718-257-6211,Brooklyn,9720 Foster Avenue
+70th Precinct,70th,70,718-851-5511,Brooklyn,154 Lawrence Avenue
+71st Precinct,71st,71,718-735-0511,Brooklyn,421 Empire Boulevard
+72nd Precinct,72nd,72,718-965-6311,Brooklyn,830 4th Avenue
+73rd Precinct,73rd,73,718-495-5411,Brooklyn,1470 East New York Avenue
+75th Precinct,75th,75,718-827-3511,Brooklyn,1000 Sutter Avenue
+76th Precinct,76th,76,718-834-3211,Brooklyn,191 Union Street
+77th Precinct,77th,77,718-735-0611,Brooklyn,127 Utica Avenue
+78th Precinct,78th,78,718-636-6411,Brooklyn,65 6th Avenue
+79th Precinct,79th,79,718-636-6611,Brooklyn,263 Tompkins Avenue
+81st Precinct,81st,81,718-574-0411,Brooklyn,30 Ralph Avenue
+83rd Precinct,83rd,83,718-574-1605,Brooklyn,480 Knickerbocker Avenue
+84th Precinct,84th,84,718-875-6811,Brooklyn,301 Gold Street
+88th Precinct,88th,88,718-636-6511,Brooklyn,298 Classon Avenue
+90th Precinct,90th,90,718-963-5311,Brooklyn,211 Union Avenue
+94th Precinct,94th,94,718-383-3879,Brooklyn,100 Meserole Avenue
+100th Precinct,100th,100,718-318-4200,Queens,92-24 Rockaway Beach Boulevard
+101st Precinct,101st,101,718-868-3400,Queens,16-12 Mott Avenue
+102nd Precinct,102nd,102,718-805-3200,Queens,87-34 118th Street
+103rd Precinct,103rd,103,718-657-8181,Queens,168-02 P.O Edward Byrne Ave.
+104th Precinct,104th,104,718-386-3004,Queens,64-2 Catalpa Avenue
+105th Precinct,105th,105,718-776-9090,Queens,92-08 222nd Street
+106th Precinct,106th,106,718-845-2211,Queens,103-53 101st Street
+107th Precinct,107th,107,718-969-5100,Queens,71-01 Parsons Boulevard
+108th Precinct,108th,108,718-784-5411,Queens,5-47 50th Avenue
+109th Precinct,109th,109,718-321-2250,Queens,37-05 Union Street
+110th Precinct,110th,110,718-476-9311,Queens,94-41 43rd Avenue
+111th Precinct,111th,111,718-279-5200,Queens,45-06 215th Street
+112th Precinct,112th,112,718-520-9311,Queens,68-40 Austin Street
+113th Precinct,113th,113,718-712-7733,Queens,167-02 Baisley Boulevard
+114th Precinct,114th,114,718-626-9311,Queens,34-16 Astoria Boulevard
+115th Precinct,115th,115,718-533-2002,Queens,92-15 Northern Boulevard
+120th Precinct,120th,120,718-876-8500,Staten Island,78 Richmond Terrace
+121st Precinct,121st,121,718-697-8700,Staten Island,970 Richmond Avenue
+122nd Precinct,122nd,122,718-667-2211,Staten Island,2320 Hylan Boulevard
+123rd Precinct,123rd,123,718-948-9311,Staten Island,116 Main Street

@@ -40,6 +40,7 @@ object main extends App{
 
   //Define Path to the file
   val violationsFile = "/media/corujin/Coding/Applaudo/ScalaTraining/DataSet/Open_Parking_and_Camera_Violations.csv"
+
   //Define decimalType and Schema
   val decimalType =  DataTypes.createDecimalType(24,2)
   val violationsSchema = StructType(Array(
@@ -85,7 +86,8 @@ object main extends App{
         "nullValue" -> "")
     ).csv(violationsFile)
 
-
+  println(violationsDF.count())
+/*
   //Checking How Many Partitions we Have
   //violationsDF.groupBy(spark_partition_id).count.show(50)
   //println(violationsDF.count())
@@ -96,8 +98,8 @@ object main extends App{
   // val t = violationsDF.where("`Issue Date` is null") //102
   // println(t.count())
   // t.show(1000)
-   violationsDF.where("`Summons Number` ='1464546344'").show() //1459704782
-/*
+  //violationsDF.where("`Summons Number` ='1464546344'").show() //1459704782
+
   //Amount Due Vs State
   //This Dataset shows wich State have most Violations, Open & Closed Revenues From all Data
   val aggDF = violationsDF.selectExpr(
@@ -108,8 +110,6 @@ object main extends App{
     "`Amount Due`",
     "`Issuing Agency`"
   ).coalesce(20).persist()
-
-
 
 
 
@@ -177,9 +177,13 @@ object main extends App{
   violationYearDF.show(false)
 
 
+  //Saving as table inside a postgresql that is running as docker
+  /*
   saveDF(payVsDueDF, "violation_year", false)
   saveDF(avgDF, "violation_avg_stdev", false)
   saveDF(yearVsMonthDF, "violation_year_month_revenue", false)
   saveDF(violationYearDF, "violation_issue_year", false)
-*/
+  */
+
+ */
 }
