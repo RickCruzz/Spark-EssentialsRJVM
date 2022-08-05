@@ -6,10 +6,11 @@ The **Open Parking and Camera Violations** dataset was initially loaded with all
 ![Untitled](./imgs/Untitled.png)
 
 ## Architeture of the Cluster
-The cluster was created using the default configuration submited by the RTJVM Course Spark essentials
+The cluster was created with docker using the default configuration available through the RTJVM Course Spark essentials
 with: `docker-compose up --scale spark-worker=3`
+Check the folder spark-cluster for more Details.
 
-And runned via spark Submit eg:
+And processed through spark Submit eg:
 `./bin/spark-submit --class myDataset.hotspot --deploy-mode client --master spark://0d1d8e86f1ab:7077 --verbose --supervise /opt/spark-apps/spark-essentials.jar /opt/spark-data/Open_Parking_and_Camera_Violations/silver.parquet /opt/spark-data/precincts.csv`
 
 
@@ -35,26 +36,26 @@ JAL2979,NY,PAS,4664359196,08/28/2019,06:56P,PHTO SCHOOL ZN SPEED VIOLATION,,50.0
 
 ## How the Dataset is processed
 
-There is 3 Main files of the Project inside the myDataset Package.
+There is 3 Main files on the Project inside the myDataset Package.
 ### definitions.scala
-In this file is defined the functions to generate two different types of files. (Arguments)
+In this file is defined the functions to generate two different types of files and the schema of the Dataset.
 
-Silver -> Transform the CSV File into a SilverStage parquet file, selecting the columns that will be used in the 
-processor.scala and inputing the Datatypes into the Schema. Also rename the columns, because in the original file
-the fields have " " in the name. That is replaced with "_"
+`generateSilverFile()`-> Transform the CSV file into a parquet file, similar to a transformation from Bronze Layer to Silver Layer,
+selecting the columns that will be used in the `processor.scala`, inputing Datatypes into the Schema and replacing the 
+" " to "_" in the column names.
 
-Sample -> Can be used to extract a Sample Data from the Silver parquet file.
-Predifined active filter -> YEAR >= 2016 and YEAR <= 2022
+`generateSampleData()` -> Can be used to extract a sample dataset from the Silver parquet file.
+Has a predefined filter: `YEAR >= 2016 and YEAR <= 2022
 
-And one function to return the main Schema to the dataset use.
+And one function to return the main Schema to the dataset use. `schemaFile()`
 
 ### processor.scala
-The function of this method is to have the main Method to execute the functions defined in the definitions.scala
+The function of this method is to have the main method to execute the functions defined in the definitions.scala
 Inside this method is checked if the args are correct and handling some basic exceptions (FileNotFound, NullPointer).
 
-After seeing how the Schema is predefined by the Spark itself with the option `inferSchema`, to increase the perfomance
-of reading, the option Schema is defined to the reader and on the definitions a function that returns the Schema is 
-defined With the types: `StringType`, `DateType` and `DoubleType` Eg: 
+After seeing how the schema is predefined by the Spark itself with the option `inferSchema`, to increase the perfomance
+of reading, the option schema is added to the reader and the Schema is defined with the 
+types: `StringType`, `DateType` and `DoubleType` Eg: 
 
 ```scala
 val violationsSchema = StructType(Array(...
@@ -68,14 +69,14 @@ StructField("Issuing Agency", StringType),..
 ```
 
 Now the `inferSchema` can be changed to `enforceSchema` and the reading method can be correctly defined with 
-the `dateFormat (”MM/dd/yyyy”)` as viewed before. After that was possible to find a problem with the date 
+the `dateFormat (”MM/dd/yyyy”)` option as viewed before. After that was possible to find a problem with the date 
 column `Issue Date` described in the last part of this document.
 
 To solve the problem with the Date column, Spark suggest the configuration bellow.
 `spark.conf.set("spark.sql.legacy.timeParserPolicy", "LEGACY")`
 
 After the first interaction it was possible to understand that the `DoubleType` wasn't able to compute 
-large numbers when we have aggregation of sum type on `Payment Amount` by example.
+large numbers when we have aggregation like `sum()` on `Payment Amount` by example.
 So to all DataTypes that can do math operations such as `sum()` I’ve decided to change them to a
 `decimalType =  DataTypes.createDecimalType(24,2)` and the result become better readable.
 
@@ -83,22 +84,24 @@ The output files of processor (Silver or Sample) are created in the same folder 
 
 ### results.scala
 Inside this file is defined the Main method that receives on the arguments the input file (PARQUET) previous generated 
-by the processor method. And if the user wants to Output the Resulting Dataframes to a Golden Layer. By default this
-output is disabled, please inform 1 to enable it.
+by the processor method. 
+If you want to save the resulting dataframes into a parquet file just add 1 to a second arg.
+By default this output is disabled.
 
 ### hotspot.scala
 Trying to understand some patterns and finding some good Insights about the dataset, I've find on the NY Data website,
-information about the precincts of the New York City. In this file we have the main function that receives the
-precincts.csv file and returns the list of the Borough that have more Traffic Violations assigned.
+information about the precincts of the New York City. In this file we have the main method that receives two arguments:
+the main Dataset file (PARQUET) and the precincts.csv file and returns the list of the Borough that have more Traffic Violations assigned.
+This file will output the results from this file to a folder called Golden Layer, with the resulting dataframe saved as Parquet.
 
 ## Questions to answer with the dataset and Insights
 The dataset described here was downloaded 07/29/2022 and have 83.182.274 rows.
 
 ### 1 - Identifying Outliers.
-My first approach was to answer and trying to find some good Insights about this data.
-But I've found that the dataset is not very clean and has some outliers.
+My first approach was to answer and trying to find some Insights about this data information.
+But I've found that the dataset is not very clean and has some outliers that need attention.
 
-The first finding was that we have some inaccurate data. On various Columns, but for this analysis I'm investigating: `State` `Issue_Date` and `Violations`
+The first finding was that we have some inaccurate data, on various Columns, for this analysis I'm pointing: `State` `Issue_Date` and `Violations`
 On the `States` we have 70 Distinct `States` and  219.274 (0,26%) records from 99, 88 or Null. 
 For understand why we Have 70 distincts possible States the file on [NYC Plate Types and State Codes](http://www.nyc.gov/html/dof/html/pdf/faq/stars_codes.pdf)
 
@@ -187,16 +190,16 @@ timeDF.where(col("Year") === lit(2021))
 
 ```
 It is possible to Identify the peak of Cars and Violations in 2021 that has been after 7:00 AM.
-In comparison with 06:00 AM we have an increase of almost 71%.
+In comparison with 6:00 AM we have an increase of almost 71%.
 And again if we compare 8:00 AM to 07:00 we have an increase of almost 40%.
-Should be more interesting redirect pollice or transit officers to decrease these stats?
+Should be more interesting redirect police or transit officers to decrease these stats?
 
 
 ### 3 - Identifying which state have most violations. Comparing what was issued and what was converted into revenue by the state.
 
 To this case I’ve decided creating two different `DataFrames` and joining them after in `outer` mode.
-The first one have data about Tickets that have been Payed and the second one have data about Tickets that have not been
-Payed.
+The first one have data about violations that have been payed and the second one have data about violations that have open
+values.
 
 
 ```scala
@@ -232,9 +235,9 @@ payVsDueDF.show(5)
 
 ```
 
-After joining them was possible to see that the state with the highest revenue was `NY` with a total of 3783640755.75.
-But surprising was that Florida, wich is 1.219 Miles away, is on 4th place and generated 66B of revenue.
-Imagine traveling just to get tickets.
+After joining them was possible to see that the state with the highest revenue was `NY` with a total of 3.783.640.755,75.
+But surprising was that Florida, wich is 1.219 Miles away, is on 4th place and generated 6.6985.972,60 of revenue.
+Imagine traveling just to get Violations.
 
 
 ### 4 - Was the average ticket price higher or lower than the average ticket price in the state with the highest revenue?
@@ -256,8 +259,7 @@ But the mean ticket that has been payed is lower than the average of the value t
 The difference is almost 10% a very good indicative that people are willing to pay their obligations.
 
 
-
-### 5 - What is the most commom violation that are payed by the users in the recent years?
+### 5 - What is the most commom violation in the recent years?
 For this case I choosed to understand what Violations are being payed by the users.
 ```scala
 val violationYearDF = mainDF.where("Payment_Amount > 0").groupBy("Year", "Issuing_Agency", "Violation")
@@ -285,8 +287,8 @@ Wich shows that School Zones are becoming hotspots of speeding violations.
 
 
 ### 6 - How the violations are evolving Day by Day on the same year?
-In this case I Decided to analyze the data by day. Creating a dataframe that has the Average of violations per DayOfWeek by Year
-and doing a comparison to the year by this DayOfWeek.
+In this case I Decided to analyze the data by day. Creating a dataframe that has the Average of violations per DayOfWeek 
+by Year and doing a comparison to the year by this DayOfWeek.
 
 ```scala
 // Trying to identify Outliers and discovery wich days/months are inside the mean of the year
@@ -317,17 +319,20 @@ and doing a comparison to the year by this DayOfWeek.
       joinedDF.show(50, false)
       joinedDF.where(col("Year") === lit(2021)).show(92, false)
 ```
-The main result of this transformation contains data from all Years but doing a comparison on the year 2021
-Is possible to see some months have a reduction on violations. Like the 02/2021 having maximum -90% Registered violations
+The main result of this transformation contains data from all Years but doing a deep analysis on the year 2021
+is possible to see some months have a reduction on violations. Like the 02/2021 having maximum -90% Registered violations
 in comparison to the average of the year. After this first week of February the number of violations is slowly increasing 
 until gets back to the average on the March/2021.
 
-4 is the Day that have less variation. Getting from +15% of the average until one day getting -72% of the average.
+On wednesdays we have less variation, goint from +15% of the average until getting -72% of the average.
 where the others have a more variation of days.
 
-The day of Week th have the greater value above average is the Monday (08/02/2021) 29.02%.
+The day that have more variation above the average is a Monday (08/02/2021) with 29.02%.
 And the day with less violations is not the first day of the year but the first day of the second month.
 02/01/2021 have registered only 564 Violations. 98.7% less of the average of the same day of week.
+
+This was caused due to an Historical Snowstorm (Winter Storm Orlena) that hit the state.  
+Besides that the first and last day of the year are top records on reduction of violations.
 
 ```scala
 +----+-----+----+---------+----------+------------+--------------------+------------------+-----------------+
@@ -463,7 +468,7 @@ yearVsMonthDF.show(false)
 |5/2021    |1190596     |85048103.00 |64165961.37   |26974822.55     |
 +----------+------------+------------+--------------+----------------+
 ```
-We can see that the month of June to September is where we have the most common violations.
+Is possible to see that the month of June to September is where we have the most common violations.
 And the revenue generated by payed tickets is decreasing.
 As we can see the months of 2022 have almost half of tickets in open.
 
@@ -471,8 +476,9 @@ As we can see the months of 2022 have almost half of tickets in open.
 For this case I've needed to create manually the precincts.csv file that contains
 The PrecinctName, Code and Information of all the precincts in New York.
 To get this results use the hotspot.scala method.
-This requires two args, the first one is the Silver-parquet file, and second one is the location
+This requires two args, the first one is the parquet file (Silver), and second one is the location
 of the precincts.csv file.
+This file can be found inside the folder: `src/main/resources/data
 
 ```scala
 val condition = (mainDF.col("Precinct") === precinctDF.col("PrecinctNumber"))
@@ -494,18 +500,30 @@ hotSpotDF.show(50,false)
 |2019|13th Precinct |Manhattan|350601       |
 
 ```
-As we can see the 19Th Precinct inside Manhattan is the leader of Occurrences of violations.
-And every year the numbers are closer. If we see the difference in the same year, for the second one in the queens,
+As we can see the 19th Precinct inside Manhattan is the leader of Occurrences of violations.
+And every year the numbers are closer. 
+If we see the difference in the same year, for the second precinct in the queens, that have a reduction of almost 15% 
 is possible to obtain some education for the users and reduce the amount of violations?
 
 
 # Transformation of the results to Golden Layer
-The results method have a second parameter if the users send a "1" the method gonna create for every 
+The `results.scala method have a second parameter if the users send a "1" the method gonna create for every 
 Dataframe shown here an parquet file with the results.
 For the hotspot file this is auto.
 
 For better understanding I've created External Tables inside the spark-sql bash.
-
+```bash
+spark-sql> show tables;
+results_avg_per_day
+results_gov
+results_pay_due
+results_stats
+results_time
+results_violation_year
+results_violations_year_month
+silver_main
+Time taken: 0.025 seconds, Fetched 8 row(s)
+```
 
 
 ## Problems found
@@ -550,13 +568,6 @@ The first one sets the incorrect date in columm to NULL and puts all the data in
 
 The second sets the incorrect date to an correct date, the next valid date. 11/31/2020 → 12/01/2020 and the second from 11/31/2019 → 12/01/2019.
 
-The number of rows identified with this problem is: **102 of 21.573.140**
-
-After these problems adressed here have been solved the final touch was develop an method to save the results of those questions into an format desired, in this case CSV files so it was possible to check the results manually and generate views with that data.
-
-The Main method created in the `ViolationsProcessor scala object`  receives 2 parameters.
-
-1 - Path of the dataset, 2 - Output of processing 
 
 ![Untitled](./imgs/Untitled 1.png)
 
