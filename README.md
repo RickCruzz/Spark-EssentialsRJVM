@@ -45,7 +45,7 @@ selecting the columns that will be used in the `processor.scala`, inputing Datat
 " " to "_" in the column names.
 
 `generateSampleData()` -> Can be used to extract a sample dataset from the Silver parquet file.
-Has a predefined filter: `YEAR >= 2016 and YEAR <= 2022
+Has a predefined filter: `YEAR >= 2020 and YEAR <= 2022` This filter returns approximately 45% of the dataset.
 
 And one function to return the main Schema to the dataset use. `schemaFile()`
 

@@ -62,7 +62,7 @@ object definitions {
    // Taking a sample of 4 years
    // From 2022 until 2019
    val sampleDF = df
-     .where("extract(YEAR from Issue_Date) >= 2016 and extract(YEAR from Issue_Date) <= 2022")
+     .where("extract(YEAR from Issue_Date) >= 2020 and extract(YEAR from Issue_Date) <= 2022")
      .coalesce(6)
     sampleDF.write.mode(SaveMode.Append).save(s"${path.replace(".csv", "")}/sample.parquet")
     return (s"${path.replace(".csv", "")}/sample.parquet")
