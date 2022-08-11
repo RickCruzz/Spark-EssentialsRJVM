@@ -45,13 +45,19 @@ selecting the columns that will be used in the `processor.scala`, inputing Datat
 " " to "_" in the column names.
 
 `generateSampleData()` -> Can be used to extract a sample dataset from the Silver parquet file.
-Has a predefined filter: `YEAR >= 2020 and YEAR <= 2022` This filter returns approximately 45% of the dataset.
+Extracts a sample of the dataset and saves it in a parquet file. 30% of the dataset is extracted.
+
+`generateSampleDataByYear()` -> Can be used to extract a sample dataset from the Silver parquet file.
+Has a predefined filter: `YER >= 2020 and YEAR <= 2022` This filter returns approximately 45% of the dataset.
 
 And one function to return the main Schema to the dataset use. `schemaFile()`
 
 ### processor.scala
 The function of this method is to have the main method to execute the functions defined in the definitions.scala
 Inside this method is checked if the args are correct and handling some basic exceptions (FileNotFound, NullPointer).
+The desired arguments are:
+- Path to the file. Eg: "/opt/spark-data/DataSet/Open_Parking_and_Camera_Violations.csv"
+- Type of the file to be generated. Eg: "silver", "sample" or "year"
 
 After seeing how the schema is predefined by the Spark itself with the option `inferSchema`, to increase the perfomance
 of reading, the option schema is added to the reader and the Schema is defined with the 
@@ -80,13 +86,14 @@ large numbers when we have aggregation like `sum()` on `Payment Amount` by examp
 So to all DataTypes that can do math operations such as `sum()` I’ve decided to change them to a
 `decimalType =  DataTypes.createDecimalType(24,2)` and the result become better readable.
 
-The output files of processor (Silver or Sample) are created in the same folder as the input file.
+The output files of processor (Silver, Sample or Year) are created in the same folder as the input file.
 
 ### results.scala
 Inside this file is defined the Main method that receives on the arguments the input file (PARQUET) previous generated 
-by the processor method. 
-If you want to save the resulting dataframes into a parquet file just add 1 to a second arg.
-By default this output is disabled.
+by the processor method.
+The desired arguments are: 
+- Path to the file (PARQUET). This file can be generated with the processor method. Eg:  "/opt/spark-data/violations.parquet"
+- Generate the resulting dataframes as parquet files. By default this output is disabled. Eg: "0" or "1"
 
 ### hotspot.scala
 Trying to understand some patterns and finding some good Insights about the dataset, I've find on the NY Data website,

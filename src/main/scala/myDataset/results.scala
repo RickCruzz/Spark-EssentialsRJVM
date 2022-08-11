@@ -16,7 +16,7 @@ object results {
       println(
         """Please define the correct Parameters
           |1 - Path to dataset (PARQUET_FILE/SAMPLE_FILE).
-          |2 - Set 1 to Generate Hive Views. (OPTIONAL)
+          |2 - Set 1 to Generate parquet files from Results. (OPTIONAL)
           |This file can be generated with processor.scala main method.
           |""".stripMargin)
       System.exit(1)
@@ -50,7 +50,7 @@ object results {
 
 
     val spark = SparkSession.builder()
-      .config("spark.master", "local[*]")
+      //.config("spark.master", "local[*]")
       .appName("Results")
       //.config("spark.executor.memory", "1g")
       //.config("spark.file.transferTo","false") // Forces to wait until buffer to write in the Disk, decrease I/O
@@ -188,7 +188,7 @@ object results {
         violationYearDF.coalesce(1).write.mode("overwrite").parquet(goldenPath + "results_violation_year")
         joinedDF.coalesce(1).write.mode("overwrite").parquet(goldenPath + "results_avg_per_day")
         yearVsMonthDF.coalesce(1).write.mode("overwrite").parquet(goldenPath + "results_violations_year_month")
-        println("Tables Created based on Results.")
+        println("Files Created based on Results.")
       }
 
     }  catch{

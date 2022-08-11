@@ -27,18 +27,26 @@ object processor {
     //filepath / Type -> Silver/Sample / GenerateViews
 
     val spark = SparkSession.builder()
-      .config("spark.master", "local[*]")
+      //.config("spark.master", "local[*]")
       .appName("Processor, Silver Layer or Sample File")
+      //.config("spark.driver.memory", "1g")
       //.config("spark.executor.memory", "1g")
       //.config("spark.file.transferTo","false") // Forces to wait until buffer to write in the Disk, decrease I/O
       //.config("spark.shuffle.file.buffer", "1m") // More buffer before writing
       //.config("spark.io.compression.lz4.blockSize","512k")
       .getOrCreate()
 
+
+
+    //spark.conf.set("spark.sql.shuffle.partitions", 240)
+    //spark.conf.set("spark.sql.shuffle.partitions", "240")
+    //spark.conf.set("spark.sql.files.maxPartitionBytes", "64m")
     // In case some of invalid Date, its gonna be fill with the next Correct Date
     spark.conf.set("spark.sql.legacy.timeParserPolicy", "LEGACY")
     // In case some of invalid Date, its gonna be fill with NULL
     //spark.conf.set("spark.sql.legacy.timeParserPolicy", "CORRECTED")
+
+
     //val path = "/media/corujin/Coding/Applaudo/ScalaTraining/DataSet/Open_Parking_and_Camera_Violations.csv"
     //val path = "/media/corujin/Coding/Applaudo/ScalaTraining/DataSet/Open_Parking_and_Camera_Violations/silverlayer.parquet"
     val path = args(0)
@@ -71,6 +79,9 @@ object processor {
             ).csv(path)
           , path)
         case "SAMPLE" => generateSampleData(
+          spark.read.parquet(path)
+          , path)
+        case "YEAR" => generateSampleDataByYear(
           spark.read.parquet(path)
           , path)
         case _ => path
