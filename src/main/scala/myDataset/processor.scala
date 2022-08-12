@@ -54,36 +54,32 @@ object processor {
     val fileName = Paths.get(path).getFileName            // Convert the path string to a Path object and get the "base name" from that path.
     val extension = fileName.toString.split("\\.").last
 
-    if (typeStage.toUpperCase() == "SILVER" & extension.toUpperCase() != "CSV"){
+    if (extension.toUpperCase() != "CSV"){
       println(
         """
-          |You informed a file to execute the Silver Layer, but the file is not a CSV file.
+          |You informed a file to execute the function but, the file is not a CSV file.
           |Please define the correct Parameters
           |1 - Path to dataset.
-          |2 - Type to create (Silver/Sample)
+          |2 - Type to create (Silver/Sample/Year)
           |""".stripMargin)
       System.exit(1)
     }
 
+    val DF =  spark.read.schema(schemaFile())
+      .options(Map(
+        "dateFormat" -> "MM/dd/yyyy",
+        "mode"-> "PERMISSIVE",
+        "enforceSchema" -> "true",
+        "header" -> "true",
+        "sep" -> ",",
+        "nullValue" -> "")
+      ).csv(path)
+
     try {
       val finalPath = typeStage.toUpperCase() match {
-        case "SILVER" => generateSilverFile(
-          spark.read.schema(schemaFile())
-            .options(Map(
-              "dateFormat" -> "MM/dd/yyyy",
-              "mode"-> "PERMISSIVE",
-              "enforceSchema" -> "true",
-              "header" -> "true",
-              "sep" -> ",",
-              "nullValue" -> "")
-            ).csv(path)
-          , path)
-        case "SAMPLE" => generateSampleData(
-          spark.read.parquet(path)
-          , path)
-        case "YEAR" => generateSampleDataByYear(
-          spark.read.parquet(path)
-          , path)
+        case "SILVER" => generateSilverFile(DF, path)
+        case "SAMPLE" => generateSampleData(DF, path)
+        case "YEAR" => generateSampleDataByYear(DF, path)
         case _ => path
       }
 

@@ -44,13 +44,14 @@ In this file is defined the functions to generate two different types of files a
 selecting the columns that will be used in the `processor.scala`, inputing Datatypes into the Schema and replacing the 
 " " to "_" in the column names.
 
-`generateSampleData()` -> Can be used to extract a sample dataset from the Silver parquet file.
+`generateSampleData()` -> Can be used to extract a sample dataset from the CSV file.
 Extracts a sample of the dataset and saves it in a parquet file. 30% of the dataset is extracted.
 
-`generateSampleDataByYear()` -> Can be used to extract a sample dataset from the Silver parquet file.
-Has a predefined filter: `YER >= 2020 and YEAR <= 2022` This filter returns approximately 45% of the dataset.
+`generateSampleDataByYear()` -> Can be used to extract a sample dataset from the CSV file.
+Has a predefined filter: `YEAR >= 2020 and YEAR <= 2022` This filter returns approximately 45% of the dataset.
 
-And one function to return the main Schema to the dataset use. `schemaFile()`
+Also have a function to return the main Schema to the dataset use. `schemaFile()` And a Function to return a DataFrame
+with formatted desired fields to insights `fieldsDF()`
 
 ### processor.scala
 The function of this method is to have the main method to execute the functions defined in the definitions.scala
@@ -163,38 +164,37 @@ timeDF.where(col("Year") === lit(2021))
   .orderBy(col("Violation_Turn").asc_nulls_last, col("Violation_Hour").asc_nulls_last)
   .show(24, false)
 
-
-
-+---------------+---------------+------+-----------+
-|Violation_Hour |Violation_Turn |Year  |Num_Records|
-+---------------+---------------+------+-----------+
-|00:00 - 00:59	|AM             |2021  |51951      |
-|01:00 - 01:59	|AM             |2021  |86185      |
-|02:00 - 02:59	|AM             |2021  |64798      |
-|03:00 - 03:59	|AM             |2021  |33975      |
-|04:00 - 04:59	|AM             |2021  |22782      |
-|05:00 - 05:59	|AM             |2021  |116573     |
-|06:00 - 06:59	|AM             |2021  |582209     |
-|07:00 - 07:59	|AM             |2021  |997455     |
-|08:00 - 08:59	|AM             |2021  |1419022    |
-|09:00 - 09:59	|AM             |2021  |1347224    |
-|10:00 - 10:59	|AM             |2021  |1142951    |
-|11:00 - 11:59	|AM             |2021  |1339524    |
-|12:00 - 12:59	|AM             |2021  |24942      |
-|01:00 - 01:59	|PM             |2021  |1320090    |
-|02:00 - 02:59	|PM             |2021  |1158055    |
-|03:00 - 03:59	|PM             |2021  |917460     |
-|04:00 - 04:59	|PM             |2021  |742789     |
-|05:00 - 05:59	|PM             |2021  |594498     |
-|06:00 - 06:59	|PM             |2021  |455201     |
-|07:00 - 07:59	|PM             |2021  |348115     |
-|08:00 - 08:59	|PM             |2021  |389264     |
-|09:00 - 09:59	|PM             |2021  |364929     |
-|10:00 - 10:59	|PM             |2021  |87677      |
-|11:00 - 11:59	|PM             |2021  |58861      |
-|12:00 - 12:59	|PM             |2021  |1242819    |
-+---------------+---------------+------+-----------+
-
++--------------+--------------+----+-----------+
+|Violation_Hour|Violation_Turn|Year|Num_Records|
++--------------+--------------+----+-----------+
+|00:00 - 00:59 |AM            |2021|51956      |
+|01:00 - 01:59 |AM            |2021|86185      |
+|02:00 - 02:59 |AM            |2021|64801      |
+|03:00 - 03:59 |AM            |2021|33978      |
+|04:00 - 04:59 |AM            |2021|22784      |
+|05:00 - 05:59 |AM            |2021|116578     |
+|06:00 - 06:59 |AM            |2021|582214     |
+|07:00 - 07:59 |AM            |2021|997458     |
+|08:00 - 08:59 |AM            |2021|1419028    |
+|09:00 - 09:59 |AM            |2021|1347231    |
+|10:00 - 10:59 |AM            |2021|1142956    |
+|11:00 - 11:59 |AM            |2021|1339529    |
+|12:00 - 12:59 |AM            |2021|24952      |
+|00:00 - 00:59 |PM            |2021|107        |
+|01:00 - 01:59 |PM            |2021|1320096    |
+|02:00 - 02:59 |PM            |2021|1158055    |
+|03:00 - 03:59 |PM            |2021|917462     |
+|04:00 - 04:59 |PM            |2021|742791     |
+|05:00 - 05:59 |PM            |2021|594501     |
+|06:00 - 06:59 |PM            |2021|455204     |
+|07:00 - 07:59 |PM            |2021|348116     |
+|08:00 - 08:59 |PM            |2021|389265     |
+|09:00 - 09:59 |PM            |2021|364930     |
+|10:00 - 10:59 |PM            |2021|87679      |
+|11:00 - 11:59 |PM            |2021|58861      |
+|12:00 - 12:59 |PM            |2021|1242819    |
+|null          |null          |2021|222        |
++--------------+--------------+----+-----------+
 ```
 It is possible to Identify the peak of Cars and Violations in 2021 that has been after 7:00 AM.
 In comparison with 6:00 AM we have an increase of almost 71%.

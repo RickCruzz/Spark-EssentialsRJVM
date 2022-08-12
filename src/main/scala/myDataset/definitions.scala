@@ -34,17 +34,10 @@ object definitions {
     return violationsSchema
   }
 
-  def generateSilverFile(df: DataFrame, path: String = ""): String = {
-
-    // Renaming The columns in the file, Changing the Space to _
-    // val columnsRedirected = df.columns.mkString(",").replace(" ", "_").split(",").toSeq
-    // val ColumnsRenamedDF = df.toDF(columnsRedirected: _*)
-
-    //Removing NULLS
-    val saveDF = df.na.drop(List("Plate","State","Issue_Date"))
-      // Converting Date to a correct Format
-      // Adding Fields that gonna be Reused on my Analyss
-      .withColumn("Issue_Date", to_date(col("Issue_Date"), "MM/dd/yyyy"))
+  def fieldsDF (df:DataFrame):DataFrame= {
+    // Converting Date to a correct Format
+    // Adding Fields that gonna be Reused on my Analyss
+    val fieldsDF = df.withColumn("Issue_Date", to_date(col("Issue_Date"), "MM/dd/yyyy"))
       .withColumn("Month", month(col("Issue_Date")))
       .withColumn("Day", dayofmonth(col("Issue_Date")))
       .withColumn("Year", year(col("Issue_Date")))
@@ -61,26 +54,35 @@ object definitions {
         )
       )
       .withColumn("Violation_Turn", when(col("Violation_Hour").isNotNull, col("Violation_Turn")).otherwise(null))
-      //.withColumn("Violation_Hour", when( length(col("Violation_Time")) >5 , concat(substring_index(col("Violation_Time"),":",1),lit(":00 - "), substring_index(col("Violation_Time"),":",1),lit(":59" ))).otherwise(null))
-      //.withColumn("Violation_Turn", when( length(col("Violation_Time")) >5 , when(col("Violation_Time").contains("A"),lit("AM")).otherwise(lit("PM"))).otherwise(null))
-      //Drop Columns that are Un-functional
-      .drop("Plate", "Violation_Time","Judgment_Entry_Date", "County", "Violation_Status", "Summons_Image","HourStart", "TurnBased")
+    //.withColumn("Violation_Hour", when( length(col("Violation_Time")) >5 , concat(substring_index(col("Violation_Time"),":",1),lit(":00 - "), substring_index(col("Violation_Time"),":",1),lit(":59" ))).otherwise(null))
+    //.withColumn("Violation_Turn", when( length(col("Violation_Time")) >5 , when(col("Violation_Time").contains("A"),lit("AM")).otherwise(lit("PM"))).otherwise(null))
+    return fieldsDF
+  }
+
+  def generateSilverFile(df: DataFrame, path: String = ""): String = {
+
+    // Renaming The columns in the file, Changing the Space to _
+    // val columnsRedirected = df.columns.mkString(",").replace(" ", "_").split(",").toSeq
+    // val ColumnsRenamedDF = df.toDF(columnsRedirected: _*)
+    val saveDF = fieldsDF(df).
+        na.drop(List("Plate","State","Issue_Date")) //Removing NULLS
+        //Drop Columns that are Un-functional
+        .drop("Plate", "Violation_Time","Judgment_Entry_Date", "County", "Violation_Status", "Summons_Image","HourStart", "TurnBased")
 
     saveDF.printSchema()
-
     saveDF.write.mode(SaveMode.Overwrite).save(s"${path.replace(".csv", "")}/silver.parquet")
-    //saveDF.repartition(24).write.mode(SaveMode.Append).save(s"${path.replace(".csv", "")}/silver.parquet")
-
   return (s"${path.replace(".csv", "")}/silver.parquet")
   }
+
 
 
   def generateSampleDataByYear (df: DataFrame, path: String = ""):String = {
    // Taking a sample of 4 years
    // From 2022 until 2019
-   val sampleDF = df
+   val sampleDF = fieldsDF(df)
      .where("extract(YEAR from Issue_Date) >= 2020 and extract(YEAR from Issue_Date) <= 2022")
-     .coalesce(6)
+     .na.drop(List("Plate","State","Issue_Date"))
+     .drop("Plate", "Violation_Time","Judgment_Entry_Date", "County", "Violation_Status", "Summons_Image","HourStart", "TurnBased")
     sampleDF.write.mode(SaveMode.Overwrite).save(s"${path.replace(".csv", "")}/sampleYear.parquet")
     return (s"${path.replace(".csv", "")}/sampleYear.parquet")
   }
@@ -88,8 +90,10 @@ object definitions {
   def generateSampleData (df: DataFrame, path: String = ""):String = {
     //Sample of 0.3% of the main dataset
     val sampleDF = df.sample(0.3)
-
-    sampleDF.write.mode(SaveMode.Overwrite).save(s"${path.replace(".csv", "")}/sample.parquet")
+    val finalDF = fieldsDF(sampleDF)
+      .na.drop(List("Plate","State","Issue_Date"))
+      .drop("Plate", "Violation_Time","Judgment_Entry_Date", "County", "Violation_Status", "Summons_Image","HourStart", "TurnBased")
+    finalDF.write.mode(SaveMode.Overwrite).save(s"${path.replace(".csv", "")}/sample.parquet")
     return (s"${path.replace(".csv", "")}/sample.parquet")
   }
 
