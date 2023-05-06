@@ -576,5 +576,5 @@ The first one sets the incorrect date in columm to NULL and puts all the data in
 The second sets the incorrect date to an correct date, the next valid date. 11/31/2020 → 12/01/2020 and the second from 11/31/2019 → 12/01/2019.
 
 
-![Untitled](./imgs/Untitled 1.png)
+![Untitled](./imgs/Untitled%201.png)
 
